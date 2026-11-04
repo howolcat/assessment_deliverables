@@ -1,0 +1,11 @@
+.venv/
+__pycache__/
+.pytest_cache/
+.env
+dataset/
+artifacts/*
+!artifacts/.gitkeep
+media/jobs/*
+!media/jobs/.gitkeep
+*.db
+*.zip

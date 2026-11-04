@@ -7,4 +7,4 @@ artifacts/*
 !artifacts/.gitkeep
 media/jobs/*
 !media/jobs/.gitkeep
-*.db
+*.db*:Zone.Identifier

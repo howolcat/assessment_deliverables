@@ -1,0 +1,96 @@
+[
+  {
+    "model": "artifacts/beans_resnet18",
+    "test_count": 128,
+    "test_accuracy": 0.7188,
+    "classes": [
+      "angular_leaf_spot",
+      "bean_rust",
+      "healthy"
+    ],
+    "confusion_matrix_rows_gt_cols_pred": [
+      [
+        30,
+        7,
+        6
+      ],
+      [
+        13,
+        23,
+        7
+      ],
+      [
+        0,
+        3,
+        39
+      ]
+    ],
+    "per_class": {
+      "angular_leaf_spot": {
+        "precision": 0.6977,
+        "recall": 0.6977,
+        "f1": 0.6977,
+        "support": 43
+      },
+      "bean_rust": {
+        "precision": 0.697,
+        "recall": 0.5349,
+        "f1": 0.6053,
+        "support": 43
+      },
+      "healthy": {
+        "precision": 0.75,
+        "recall": 0.9286,
+        "f1": 0.8298,
+        "support": 42
+      }
+    }
+  },
+  {
+    "model": "artifacts/beans_resnet18_full",
+    "test_count": 128,
+    "test_accuracy": 0.9297,
+    "classes": [
+      "angular_leaf_spot",
+      "bean_rust",
+      "healthy"
+    ],
+    "confusion_matrix_rows_gt_cols_pred": [
+      [
+        40,
+        3,
+        0
+      ],
+      [
+        2,
+        41,
+        0
+      ],
+      [
+        1,
+        3,
+        38
+      ]
+    ],
+    "per_class": {
+      "angular_leaf_spot": {
+        "precision": 0.9302,
+        "recall": 0.9302,
+        "f1": 0.9302,
+        "support": 43
+      },
+      "bean_rust": {
+        "precision": 0.8723,
+        "recall": 0.9535,
+        "f1": 0.9111,
+        "support": 43
+      },
+      "healthy": {
+        "precision": 1.0,
+        "recall": 0.9048,
+        "f1": 0.95,
+        "support": 42
+      }
+    }
+  }
+]

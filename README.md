@@ -1,7 +1,18 @@
 <div align="center">
 
-#  콩잎 질병 분류 Vision AI
+# 🌱 콩잎 질병 분류 Vision AI
 
+**콩잎 사진 한 장으로 각진잎반점병 · 녹병 · 정상을 판별하는 웹 서비스**<br/>
+ResNet18 Fine-tuning · FastAPI 동기/비동기 · Redis · Celery · PostgreSQL
+
+![Python](https://img.shields.io/badge/Python-3.11-3776AB?logo=python&logoColor=white)
+![PyTorch](https://img.shields.io/badge/PyTorch-2.5.1-EE4C2C?logo=pytorch&logoColor=white)
+![Transformers](https://img.shields.io/badge/Transformers-microsoft%2Fresnet--18-FFD21E?logo=huggingface&logoColor=black)
+![FastAPI](https://img.shields.io/badge/FastAPI-009688?logo=fastapi&logoColor=white)
+![Celery](https://img.shields.io/badge/Celery-5.6-37814A?logo=celery&logoColor=white)
+![Redis](https://img.shields.io/badge/Redis-7.4-DC382D?logo=redis&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-17-4169E1?logo=postgresql&logoColor=white)
+![Docker Compose](https://img.shields.io/badge/Docker%20Compose-2496ED?logo=docker&logoColor=white)
 
 [📄 최종 기술보고서](reports/08_최종기술보고서.md) · [🏗 아키텍처](#-아키텍처) · [📊 모델 결과](#-모델-결과) · [⚡ 시스템 성능](#-시스템-성능) · [▶ 재실행 안내](#-재실행-안내)
 
@@ -31,17 +42,17 @@
 
 | 영역 | 결과 | 근거 |
 |---|---|---|
-| 서비스 모델 (Head-only) | Val **76.7%** · Test **71.9%** | [산출물 1](reports/01_FineTuning_결과보고서.md) |
-| 비교 모델 (Full Fine-tuning) | Val **97.0%** · Test **93.0%** (+21.1%p) | [산출물 1](reports/01_FineTuning_결과보고서.md) |
-| 질병 잎을 정상으로 오판 (Test) | Head-only **13건** → Full **0건** | [산출물 1](reports/01_FineTuning_결과보고서.md) |
-| 추가 실험 (Validation 비교) | Head-only 10 epoch Val **89.5%** (+12.8%p) · Full lr 5e-5 Val **97.0%** (과적합 완화) | [산출물 1 §6](reports/01_FineTuning_결과보고서.md) |
-| 캐시 효과 (동기 응답) | 41.2ms → **4.3ms** (89.6% 감소) | [산출물 6](reports/06_성능비교_보고서.md) |
-| 비동기 접수 응답 | **13.4ms** (동기 대비 67.5% 빠름) | [산출물 6](reports/06_성능비교_보고서.md) |
-| 비동기 서버 처리 (DB 기준) | MISS **39ms** · HIT **9ms** | [산출물 6](reports/06_성능비교_보고서.md) |
-| 기능 테스트 | 실환경 **20건 PASS** · 모의 **4 passed** | [산출물 7](reports/07_기능테스트_오류분석.md) |
+| **최종 서비스 모델** (C. Full lr 5e-5) | Val **97.0%** · Test **95.3%** (참고) · 질병 → 정상 오판 **0건** | [산출물 1 §8·9](reports/01_FineTuning_결과보고서.md) |
+| 필수 기준선 (A. Head-only) | Val **76.7%** · Test **71.9%** · 질병 → 정상 오판 **13건** | [산출물 1](reports/01_FineTuning_결과보고서.md) |
+| 비교 실험 (B. Full, lr 2e-4) | Val **97.0%** · Test **93.0%** (A 대비 +21.1%p) | [산출물 1](reports/01_FineTuning_결과보고서.md) |
+| 추가 실험 (D. Head-only 10 epoch) | Val **89.5%** (A 대비 +12.8%p) | [산출물 1 §6](reports/01_FineTuning_결과보고서.md) |
+| 캐시 효과 (동기 응답) | 27.4ms → **2.7ms** (90.1% 감소) | [산출물 6](reports/06_성능비교_보고서.md) |
+| 비동기 접수 응답 | **8.8ms** (동기 대비 67.9% 빠름) | [산출물 6](reports/06_성능비교_보고서.md) |
+| 비동기 서버 처리 (DB 기준) | MISS **32ms** · HIT **8ms** | [산출물 6](reports/06_성능비교_보고서.md) |
+| 기능 테스트 | 실환경 **23건 PASS** · 모의 **4 passed** | [산출물 7](reports/07_기능테스트_오류분석.md) |
 
-- **답 1**: 제공 기본 설정(3 epoch)에서 Backbone을 고정하면 Test 정확도가 21.1%p 낮고, 병든 잎을 정상으로 놓치는 오류가 생깁니다. 추가 실험으로 보면 이 차이의 상당 부분은 **학습 부족**(10 epoch로 Val +12.8%p)이고, 나머지는 **Backbone 고정 방식 자체의 한계**(Full 대비 Val −7.5%p)입니다. 평가 기준에 따라 **서비스에는 Head-only 모델을 연결**했습니다.
-- **답 2**: 비동기에서만 생기는 구조 비용(큐 전달 · DB 기록 · 파일 읽기)은 약 9ms로 작습니다. 사용자가 느끼는 지연은 대부분 **결과를 가져오는 폴링 간격**에서 생깁니다.
+- **답 1**: 제공 기본 설정(3 epoch)에서 Backbone을 고정하면 Test 정확도가 21.1%p 낮고, 병든 잎을 정상으로 놓치는 오류가 생깁니다. 추가 실험으로 보면 이 차이의 상당 부분은 **학습 부족**(10 epoch로 Val +12.8%p)이고, 나머지는 **Backbone 고정 방식 자체의 한계**(Full 대비 Val −7.5%p)입니다. 필수 기준인 Head-only로 전체 기능을 검증한 뒤, 강사 확인을 거쳐 **최종 서비스 모델을 C(Full lr 5e-5)로 교체**했습니다. B와 C는 Validation이 같아(0.9699) **Validation 안정성**(이후 epoch 하락폭)으로 C를 골랐고, Test는 선택 근거로 쓰지 않았습니다.
+- **답 2**: 비동기에서만 생기는 구조 비용(큐 전달 · DB 기록 · 파일 읽기)은 10ms 미만으로 작습니다. 모델 교체 전후 두 번 측정해 같은 결론을 얻었습니다. 사용자가 느끼는 지연은 대부분 **결과를 가져오는 폴링 간격**에서 생깁니다.
 
 ---
 
@@ -89,12 +100,12 @@ flowchart TB
 
 | 실험 | 학습 대상 | epochs / lr | Best Val Acc | Test Acc | 녹병 Recall | 비고 |
 |---|---|---|---:|---:|---:|---|
-| A. Head-only | 분류층만 | 3 / 2e-4 | 0.7669 | 0.7188 | 0.5349 | **서비스 모델** (필수) |
+| A. Head-only | 분류층만 | 3 / 2e-4 | 0.7669 | 0.7188 | 0.5349 | 필수 기준선 |
 | B. Full Fine-tuning | 전체 가중치 | 3 / 2e-4 | **0.9699** | 0.9297 | 0.9535 | 비교 실험 (선택) |
-| C. Full + 낮은 lr | 전체 가중치 | 3 / 5e-5 | **0.9699** | 0.9531 * | 0.9070 | 추가 실험 |
+| **C. Full + 낮은 lr** | 전체 가중치 | 3 / 5e-5 | **0.9699** | 0.9531 * | 0.9070 | **최종 서비스 모델** |
 | D. Head-only 10 epoch | 분류층만 | 10 / 2e-4 | 0.8947 | 0.8828 * | 0.7674 | 추가 실험 |
 
-\* C·D는 A·B의 Test를 확인한 뒤 측정한 **참고 지표**입니다. 추가 실험의 비교·판단은 Validation으로만 했고, Test로 모델을 고르거나 다시 학습하지 않았습니다.
+\* C·D는 A·B의 Test를 확인한 뒤 측정한 **참고 지표**입니다. 추가 실험과 최종 모델 선택은 Validation으로만 판단했고, Test로 모델을 고르거나 다시 학습하지 않았습니다.
 
 ![실험별 Validation 정확도](reports/figures/val_curves.png)
 
@@ -110,19 +121,20 @@ flowchart TB
 
 ## ⚡ 시스템 성능
 
-Docker CPU 추론, 조건별 5회 중앙값입니다. 측정 직전 캐시를 비우고 MISS → HIT 순으로 측정했습니다.
+최종 서비스 모델(C) 기준, Docker CPU 추론, 조건별 5회 중앙값입니다. 측정 직전 캐시를 비우고 MISS → HIT 순으로 측정했습니다. 괄호는 교체 전 Head-only(A)로 같은 이미지를 측정한 값입니다.
 
 | 경로 | 캐시 | HTTP 응답 | 최종 결과 확인 | 모델 추론 | 서버 처리 (DB 기준) |
 |---|---|---:|---:|---:|---:|
-| 동기 | MISS | 41.2ms | 41.2ms | 28.94ms | — |
-| 동기 | HIT | **4.3ms** | 4.3ms | 생략 | — |
-| 비동기 | MISS | **13.4ms** (접수) | 71.6ms | 24.24ms | 39ms |
-| 비동기 | HIT | 9.6ms (접수) | 66.3ms | 생략 | 9ms |
+| 동기 | MISS | 27.4ms (41.2) | 27.4ms (41.2) | 20.74ms (28.94) | — |
+| 동기 | HIT | **2.7ms** (4.3) | 2.7ms (4.3) | 생략 | — |
+| 비동기 | MISS | **8.8ms** 접수 (13.4) | 64.7ms (71.6) | 19.32ms (24.24) | 32ms (39) |
+| 비동기 | HIT | 8.0ms 접수 (9.6) | 64.7ms (66.3) | 생략 | 8ms (9) |
 
 ![응답시간 중앙값](reports/figures/timings_median.png)
 
 - 비동기 접수가 빠른 건 **추론이 빨라져서가 아니라** 처리를 worker로 넘기고 `job_id`만 먼저 돌려주기 때문입니다.
-- 비동기 "최종 결과 확인"은 0.05초 간격 폴링을 포함한 값이라, 실제 서버 처리 시간은 DB 기준 값(39ms / 9ms)이 더 정확합니다.
+- 비동기 "최종 결과 확인"은 0.05초 간격 폴링을 포함한 값이라, 실제 서버 처리 시간은 DB 기준 값(32ms / 8ms)이 더 정확합니다.
+- 두 모델은 같은 ResNet18 구조라 추론 비용이 같습니다. 1차·2차의 절대값 차이는 측정 회차 간 편차이며, 결론(캐시 약 90%, 접수 약 68% 단축)은 두 번 모두 같았습니다.
 - 모델 첫 로딩(약 2~3.7초)은 비교에서 제외했습니다.
 
 측정 조건·원본값·해석: [산출물 6](reports/06_성능비교_보고서.md)
@@ -175,7 +187,7 @@ dataset/
 </details>
 
 <details>
-<summary><b>2. 모델 학습</b> — <code>artifacts/beans_resnet18/</code> 생성</summary>
+<summary><b>2. 모델 학습</b> — 필수 기준선 A와 최종 서비스 모델 C 생성</summary>
 
 **방법 A — 로컬 가상환경 (검증한 방법, GPU가 있으면 자동 사용)**
 
@@ -196,7 +208,16 @@ docker compose run --rm trainer
 
 결과 파일: `config.json`, `model.safetensors`, `preprocessor_config.json`, `training_report.json`
 
-(선택) Full Fine-tuning 비교: `--freeze-backbone`을 빼고 `--output artifacts/beans_resnet18_full`
+방법 B(trainer)는 필수 기준선 A만 만듭니다.
+
+**최종 서비스 모델(C) 학습** (방법 A 환경에서)
+
+```bash
+python -m training.finetune --data dataset --output artifacts/beans_resnet18_full_lr5e-5 \
+  --epochs 3 --batch-size 8 --lr 0.00005
+```
+
+(선택) 비교 실험 B: `--freeze-backbone`을 빼고 `--output artifacts/beans_resnet18_full` · D: `--freeze-backbone --epochs 10 --output artifacts/beans_resnet18_head10`
 
 </details>
 
@@ -205,7 +226,8 @@ docker compose run --rm trainer
 
 ```bash
 cd ~/fastapi_resnet18
-cp .env.example .env          # MODEL_PATH=artifacts/beans_resnet18
+cp .env.example .env          # 기본값 MODEL_PATH=artifacts/beans_resnet18 (필수 기준선 A)
+sed -i 's|^MODEL_PATH=.*|MODEL_PATH=artifacts/beans_resnet18_full_lr5e-5|' .env   # 최종 서비스 모델 C
 mkdir -p media/jobs
 docker compose up -d --build  # redis, postgres, web, worker 동시 실행
 
@@ -291,7 +313,8 @@ docker compose up -d --force-recreate web worker   # 모델이나 .env 변경 �
 | `web`이 뜨지 않음 | `docker compose logs web`, postgres가 healthy인지 |
 | 비동기 작업이 계속 `queued` | `docker compose logs worker`, worker 컨테이너가 Up인지 |
 | 비동기 접수가 503 | Redis 컨테이너 상태 (`docker compose ps redis`) |
-| 라벨이 ImageNet 사물 이름으로 나옴 | `.env`의 `MODEL_PATH`가 `artifacts/beans_resnet18`인지, 학습했는지 |
+| 라벨이 ImageNet 사물 이름으로 나옴 | `.env`의 `MODEL_PATH`가 학습한 모델 폴더(`artifacts/beans_resnet18_full_lr5e-5` 등)인지, 학습했는지 |
+| 모델을 바꿨는데 반영이 안 됨 | `docker compose up -d --force-recreate web worker`로 두 컨테이너 모두 재시작 |
 | `address already in use` | 8000·6379·5432 포트를 쓰는 다른 프로그램(로컬 uvicorn 등) 종료 |
 | 첫 요청만 2~3초 걸림 | 정상 — 프로세스마다 첫 요청에서 모델을 로드 |
 

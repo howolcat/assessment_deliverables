@@ -4,6 +4,7 @@
 - 자동 문서: `/docs` (Swagger UI), `/openapi.json`
 - 응답 형식: JSON (`/vision/*`는 HTML)
 - 모든 응답 예시는 **실제 실행 결과**이다. 오류 응답 중 실제로 실행하지 않고 코드·모의 테스트로만 확인한 항목은 따로 표시했다.
+- 대부분의 예시는 **필수 검증 단계(A. Head-only, `model_id: artifacts/beans_resnet18`)** 에서 수집했다. 최종 서비스 모델로 교체한 뒤에는 `model_id`가 `artifacts/beans_resnet18_full_lr5e-5`로 바뀌며, 응답 형식은 같다 (3장 "최종 서비스 모델 응답" 참고).
 
 ![Swagger UI](evidence/swagger.png)
 
@@ -59,7 +60,7 @@ curl: (7) Failed to connect to 127.0.0.1 port 8000 after 0 ms: Could not connect
 
 | 필드 | 타입 | 설명 |
 |---|---|---|
-| `model_id` | string | 사용한 모델 경로 (`artifacts/beans_resnet18`) |
+| `model_id` | string | 사용한 모델 경로 (`.env`의 `MODEL_PATH`) |
 | `top1` | object | 가장 높은 점수의 `{label, score}` |
 | `all` | array | 전체 클래스의 `{label, score}`, 점수 내림차순 |
 | `inference_ms` | number \| null | 실제 모델 추론 시간. **캐시 HIT이면 `null`** (0ms가 아니라 추론 생략) |
@@ -98,6 +99,24 @@ curl: (7) Failed to connect to 127.0.0.1 port 8000 after 0 ms: Could not connect
   "cache_hit": true
 }
 ```
+
+### 최종 서비스 모델 응답 (실제: `bean_rust_test.36.jpg`, 교체 후)
+
+```json
+{
+  "model_id": "artifacts/beans_resnet18_full_lr5e-5",
+  "top1": {"label": "bean_rust", "score": 0.5239846110343933},
+  "all": [
+    {"label": "bean_rust", "score": 0.5239846110343933},
+    {"label": "angular_leaf_spot", "score": 0.44445666670799255},
+    {"label": "healthy", "score": 0.03155873715877533}
+  ],
+  "inference_ms": null,
+  "cache_hit": true
+}
+```
+
+> 같은 이미지를 두 번째로 요청한 응답이라 HIT이다. 최종 모델에서도 녹병과 각진잎반점병의 점수 차가 작은 사례가 있다.
 
 ### 오류 응답
 

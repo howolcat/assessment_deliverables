@@ -9,7 +9,7 @@
 | 추가 실험 | C. Full + 낮은 학습률(5e-5), D. Head-only 10 epoch — **Validation으로 비교** (6장) |
 | 학습·검증 데이터 | `dataset/train`, `dataset/val` |
 | 별도 보관 데이터 | `dataset/test` (학습·모델 선택에 사용하지 않음) |
-| 서비스 연결 모델 | `artifacts/beans_resnet18/` (Head-only) |
+| 서비스 연결 모델 | 필수 검증: `artifacts/beans_resnet18/` (A. Head-only) → **최종 서비스: `artifacts/beans_resnet18_full_lr5e-5/` (C. Full lr 5e-5)** (9장) |
 | 실험 상태 | **실행 완료** |
 
 ---
@@ -150,7 +150,7 @@ Backbone을 고정하면 ImageNet 사물 분류용 특징을 그대로 쓰게 �
 
 | 모델 | Val Acc | **Test Acc** | 차이 |
 |---|---:|---:|---:|
-| A. Head-only (서비스 모델) | 0.7669 | **0.7188** (92/128) | -4.8%p |
+| A. Head-only (필수 기준선) | 0.7669 | **0.7188** (92/128) | -4.8%p |
 | B. Full Fine-tuning | 0.9699 | **0.9297** (119/128) | -4.0%p |
 
 두 모델 모두 Test가 Validation보다 4~5%p 낮다. Validation으로 Best epoch를 골랐기 때문에 Validation 수치가 다소 낙관적으로 나온 것으로 본다.
@@ -195,7 +195,7 @@ Backbone을 고정하면 ImageNet 사물 분류용 특징을 그대로 쓰게 �
 
 4장의 관찰(Head-only는 Loss가 계속 감소 = 덜 학습됨, Full은 epoch 1 이후 하락 = 과적합 경향)을 확인하려고, **제공 코드는 그대로 두고 실행 옵션만** 바꿔 2개 실험을 추가했다. 기존 A·B 결과를 덮어쓰지 않도록 출력 폴더를 따로 사용했다.
 
-> **원칙**: 추가 실험의 비교와 판단은 **Validation으로만** 한다. 이 실험들을 하기 전에 A·B의 Test 결과를 이미 확인했으므로, C·D의 Test 값은 **참고 지표**로만 기록하고 모델 선택·재학습에는 사용하지 않는다. 서비스 모델(A)은 바꾸지 않는다.
+> **원칙**: 추가 실험의 비교와 판단은 **Validation으로만** 한다. 이 실험들을 하기 전에 A·B의 Test 결과를 이미 확인했으므로, C·D의 Test 값은 **참고 지표**로만 기록하고 모델 선택·재학습에는 사용하지 않는다. (이 실험 시점에는 서비스 모델 A를 유지했으며, 이후 교체 과정은 9장에 기록했다.)
 
 ```bash
 # C. Full + 낮은 학습률 (평가가이드 6-1 예시 설정)
@@ -244,7 +244,7 @@ python -m training.finetune --data dataset --output artifacts/beans_resnet18_hea
 
 1. Validation으로는 **B와 C를 구분할 수 없다** (둘 다 133장 중 129장). C는 epoch 후반이 더 안정적이라는 차이만 있다.
 2. Head-only는 학습을 늘리면 크게 좋아지지만(+12.8%p), Backbone까지 학습하는 Full에는 미치지 못한다(−7.5%p).
-3. 서비스 모델은 평가 기준대로 **A(Head-only)를 유지**한다.
+3. 서비스 모델은 평가 기준대로 **A(Head-only)를 유지**한다. *(이후 강사 확인을 거쳐 9장에서 C로 교체했다.)*
 
 ### 6-4. Test 참고 지표 (모델 선택에 사용하지 않음)
 
@@ -261,7 +261,7 @@ python -m training.finetune --data dataset --output artifacts/beans_resnet18_hea
 
 - **D는 Head-only의 약점을 크게 줄였다.** Test가 0.7188 → 0.8828, 질병 → healthy 오판이 13 → 1건이다. A의 약점 상당 부분은 방식 자체보다 **학습 부족** 때문이었다.
 - D에도 **녹병 → 각진잎반점병 혼동(9건)** 이 남아 있다. 두 질병 구분은 분류층만 학습해서는 한계가 있다.
-- C는 Test에서 B보다 3장 더 맞혔지만(122 vs 119), **Validation에서는 동률**이었고 128장 중 3장 차이는 작다. 이 결과로 C가 B보다 낫다고 결론 내리지 않는다.
+- C는 Test에서 B보다 3장 더 맞혔지만(122 vs 119), **Validation에서는 동률**이었고 128장 중 3장 차이는 작다. 이 결과로 C가 B보다 낫다고 결론 내리지 않으며, 9장의 서비스 모델 선택에도 Test 값을 근거로 쓰지 않았다.
 
 ---
 
@@ -282,6 +282,8 @@ python -m training.finetune --data dataset --output artifacts/beans_resnet18_hea
 
 ## 8. 서비스 연결 확인
 
+### 8-1. 필수 검증 단계 — A. Head-only (`artifacts/beans_resnet18`)
+
 - `.env`: `MODEL_PATH=artifacts/beans_resnet18`
 - 모든 응답의 `model_id`가 `artifacts/beans_resnet18`이고, 라벨이 ImageNet 클래스가 아닌 **콩잎 3클래스**로 출력됨을 확인했다.
 
@@ -294,7 +296,38 @@ python -m training.finetune --data dataset --output artifacts/beans_resnet18_hea
 | 02 비동기 job 1 | bean_rust_test.35.jpg | bean_rust | 0.4388 | ✅ |
 | 02 비동기 job 4 | angular_leaf_spot_test.10.jpg | angular_leaf_spot | 0.5146 | ✅ |
 
-> 위 표는 **동작 확인용 샘플**이며 정확도 지표가 아니다. 정량 성능은 4장(Validation), 5장(Test), 6장(추가 실험)을 따른다. 점수가 0.4~0.6대로 낮고, job 1은 2위 healthy(0.4356)와 차이가 0.003에 불과해 Head-only 모델의 확신도가 낮음을 보여준다.
+> 위 표는 **동작 확인용 샘플**이며 정확도 지표가 아니다. 점수가 0.4~0.6대로 낮고, job 1은 2위 healthy(0.4356)와 차이가 0.003에 불과해 Head-only 모델의 확신도가 낮음을 보여준다.
+
+### 8-2. 최종 서비스 — C. Full lr 5e-5 (`artifacts/beans_resnet18_full_lr5e-5`)
+
+교체 절차 (평가가이드 2장 "모델 경로 변경 후 FastAPI와 Celery Worker를 모두 재시작한다"를 따름):
+
+```bash
+sed -i 's|^MODEL_PATH=.*|MODEL_PATH=artifacts/beans_resnet18_full_lr5e-5|' .env
+docker compose up -d --force-recreate web worker
+```
+
+| 확인 | 결과 |
+|---|---|
+| 응답·DB의 `model_id` | `artifacts/beans_resnet18_full_lr5e-5` |
+| 교체 후 worker 첫 작업 (job 24) | `inference_ms` 2529.36 — 새 모델을 처음 로드 |
+| 캐시 | 캐시 키에 모델 경로 해시가 들어가므로 캐시를 비우지 않아도 이전 모델의 결과와 섞이지 않음 (`services.cache_key()`) |
+
+| 경로 | 입력 이미지 (정답) | top1.label | top1.score | 정답 일치 |
+|---|---|---|---:|:---:|
+| 동기 | angular_leaf_spot_test.2.jpg | angular_leaf_spot | 0.9535 | ✅ |
+| 동기 | bean_rust_test.36.jpg | bean_rust | 0.5240 (2위 angular 0.4445) | ✅ |
+| 동기 | healthy_test.34.jpg | healthy | 0.9801 | ✅ |
+| 비동기 job 24 | bean_rust 테스트 이미지 | bean_rust | 0.9974 | ✅ |
+
+**같은 이미지로 비교한 사례** — 성능 측정([산출물 6](06_성능비교_보고서.md))은 교체 전후에 **같은 이미지 10장**을 썼다. 교체 전(A)에 틀린 동기 이미지 2장이 교체 후(C)에는 모두 맞았다.
+
+| 이미지 (정답) | A. Head-only 예측 | C. Full lr 5e-5 예측 |
+|---|---|---|
+| angular_leaf_spot_test.41 (angular) | bean_rust ❌ | angular_leaf_spot ✅ |
+| bean_rust_test.13 (rust) | healthy ❌ | bean_rust ✅ |
+
+> 샘플 10장의 결과일 뿐 정확도 지표가 아니다. bean_rust_test.36처럼 C에서도 두 질병의 점수가 비슷한 사례가 남아 있다.
 
 ---
 
@@ -307,12 +340,20 @@ python -m training.finetune --data dataset --output artifacts/beans_resnet18_hea
 | 선택: Full Fine-tuning 비교 | **완료** (Best Val Acc 0.9699, +20.3%p) |
 | 추가: Test 세트 별도 평가 | **완료** (A 0.7188 / B 0.9297, 모델 선택 후 1회) |
 | 추가: 학습 옵션 실험 C·D | **완료** (Val 비교: C 0.9699 / D 0.8947, Test는 참고 지표) |
+| 추가: 최종 서비스 모델 교체 | **완료** (A → C, 8-2) |
 
-**서비스 모델 결정**: 평가 기준(필수 = Head-only, 서비스 경로 = `artifacts/beans_resnet18`)에 맞춰 **Head-only 모델을 서비스에 연결**했다. Full Fine-tuning 모델은 비교 실험 결과로 보관하며, 서비스 교체는 [산출물 8](08_최종기술보고서.md)의 개선 제안으로 다룬다.
+**서비스 모델 결정**
+
+1. **필수 검증**: 평가 기준(필수 = Head-only)에 따라 A(`artifacts/beans_resnet18`)를 동기·비동기 서비스에 연결하고 모든 기능·성능·장애 테스트를 마쳤다 ([산출물 3~7](07_기능테스트_오류분석.md)).
+2. **최종 서비스 교체**: 이후 강사에게 확인한 결과 "가장 잘 나온 모델을 서비스에 쓰라"는 지침을 받아, 서비스 모델을 **C. Full lr 5e-5**로 교체했다.
+3. **C를 고른 기준**: Best Validation은 B와 C가 0.9699로 같다. 동률을 가르는 기준으로 **Validation 안정성**(최고점 이후 하락폭: B −3.0%p, C −0.75%p)을 사용했고, 이는 6-3에 Test 측정 전 기록한 "C는 epoch 후반이 더 안정적"이라는 판단과 같다. Test 참고 지표(C 0.9531 > B 0.9297)는 선택 근거로 쓰지 않았다.
+4. **투명성 기록**: 동률을 가르는 기준(안정성)은 C·D의 Test 값을 본 **뒤에** 적용했다. 선택 근거 자체는 Validation 값이지만, 결정 시점이 Test 확인 이후라는 점을 함께 기록한다.
+5. **경로**: 평가가이드 2장은 경로를 `artifacts/beans_resnet18`로 통일하라고 하지만, 6-1장의 "Full 학습 모델은 별도 경로에 저장하고 결과 파일을 덮어쓰지 않는다"는 원칙을 우선해 **A의 폴더를 덮어쓰지 않고 `MODEL_PATH`를 C의 폴더로 바꿨다.** 이 차이는 의도한 것이다.
 
 **한계**
 
-- Head-only(서비스 모델)는 3 epoch에서 덜 학습된 상태다. 10 epoch로 늘리면 Val 0.8947까지 오르는 것을 확인했지만(6장), 평가 기준에 따라 서비스 모델은 바꾸지 않았다.
+- 필수 기준선인 Head-only(A)는 3 epoch에서 덜 학습된 상태다. 10 epoch로 늘리면 Val 0.8947까지 오르지만(6장), 최종 서비스에는 Full(C)을 사용했다.
+- 최종 서비스 모델 C의 Test(0.9531)는 A·B Test를 본 뒤 측정한 참고 지표이며, C에 대한 독립적인 최종 평가는 없다.
 - Full은 epoch 1 이후 Validation 성능이 하락해 과적합 경향이 있다. 학습률을 낮추면(C) 하락은 줄지만 최고점은 같았다.
 - Validation을 Best 모델 선택에 사용해 Validation 수치가 Test보다 1~5%p 높게 나왔다.
 - Validation 133장은 1장이 약 0.75%p에 해당해, B·C처럼 작은 차이는 구분하기 어렵다.

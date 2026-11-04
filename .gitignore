@@ -8,4 +8,3 @@ artifacts/*
 media/jobs/*
 !media/jobs/.gitkeep
 *.db
-*.zip

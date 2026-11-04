@@ -2,17 +2,6 @@
 
 # 🌱 콩잎 질병 분류 Vision AI
 
-**콩잎 사진 한 장으로 각진잎반점병 · 녹병 · 정상을 판별하는 웹 서비스**<br/>
-ResNet18 Fine-tuning · FastAPI 동기/비동기 · Redis · Celery · PostgreSQL
-
-![Python](https://img.shields.io/badge/Python-3.11-3776AB?logo=python&logoColor=white)
-![PyTorch](https://img.shields.io/badge/PyTorch-2.5.1-EE4C2C?logo=pytorch&logoColor=white)
-![Transformers](https://img.shields.io/badge/Transformers-microsoft%2Fresnet--18-FFD21E?logo=huggingface&logoColor=black)
-![FastAPI](https://img.shields.io/badge/FastAPI-009688?logo=fastapi&logoColor=white)
-![Celery](https://img.shields.io/badge/Celery-5.6-37814A?logo=celery&logoColor=white)
-![Redis](https://img.shields.io/badge/Redis-7.4-DC382D?logo=redis&logoColor=white)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-17-4169E1?logo=postgresql&logoColor=white)
-![Docker Compose](https://img.shields.io/badge/Docker%20Compose-2496ED?logo=docker&logoColor=white)
 
 [📄 최종 기술보고서](reports/08_최종기술보고서.md) · [🏗 아키텍처](#-아키텍처) · [📊 모델 결과](#-모델-결과) · [⚡ 시스템 성능](#-시스템-성능) · [▶ 재실행 안내](#-재실행-안내)
 
